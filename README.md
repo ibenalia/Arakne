@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Arakne OSINT
+
+Arakne is an AI-assisted OSINT (Open Source Intelligence) tool that extracts named entities from text and visualizes their relationships as an interactive graph network.
+
+## Features
+
+- **Text Analysis**: Extract named entities (people, organizations, locations, etc.) from any text
+- **Relationship Mapping**: Automatically identify and visualize connections between entities
+- **Interactive Graph**: Explore entity relationships through an interactive network graph
+- **Entity Management**: Edit, merge, or delete extracted entities to refine analysis
+- **Export Capabilities**: Save analysis results in various formats (JSON, CSV, PNG)
+
+## Technology Stack
+
+- **Frontend**: Next.js, React, TypeScript
+- **UI Components**: Shadcn UI, Tailwind CSS
+- **NLP Processing**: Compromise NLP, Natural
+- **Visualization**: Vis Network, React Force Graph, D3
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Enter or paste text containing entities (news articles, reports, documents, etc.)
+2. The system will automatically extract named entities and their relationships
+3. Explore the resulting network graph to discover connections
+4. Refine the analysis by adding, editing, or removing entities
+5. Export your findings in your preferred format
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
