@@ -7,8 +7,8 @@ Arakne is an AI-assisted OSINT (Open Source Intelligence) tool that extracts nam
 - **Text Analysis**: Extract named entities (people, organizations, locations, etc.) from any text
 - **Relationship Mapping**: Automatically identify and visualize connections between entities
 - **Interactive Graph**: Explore entity relationships through an interactive network graph
-- **Entity Management**: Edit, merge, or delete extracted entities to refine analysis
-- **Export Capabilities**: Save analysis results in various formats (JSON, CSV, PNG)
+- **Entity Management**: Edit, merge, or delete extracted entities to refine analysis [WIP]
+- **Export Capabilities**: Save analysis results in various formats (JSON, CSV, PNG) [WIP]
 
 ## Technology Stack
 
