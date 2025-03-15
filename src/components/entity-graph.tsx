@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from 'react'
-import { Entity, Relationship } from '@/lib/entity-extraction'
+import { Entity, EntityType, Relationship } from '@/lib/entity-extraction'
 
 interface EntityGraphProps {
   entities: Entity[]
   relationships: Relationship[]
+  onEntityClick?: (entityName: string, entityType: EntityType) => void
 }
 
 /**
@@ -13,7 +14,7 @@ interface EntityGraphProps {
  * Displays entities as nodes and relationships as edges in a force-directed or hierarchical layout.
  * Uses vis-network for rendering and Font Awesome for icons.
  */
-export function EntityGraph({ entities, relationships }: EntityGraphProps) {
+export function EntityGraph({ entities, relationships, onEntityClick }: EntityGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
   // Add state for hierarchical layout - default to true to start with hierarchical view
@@ -114,6 +115,16 @@ export function EntityGraph({ entities, relationships }: EntityGraphProps) {
   useEffect(() => {
     if (!containerRef.current || !iconsLoaded) return
     
+    // Monitor dark mode changes using matchMedia
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setIsDarkMode(darkModeMediaQuery.matches)
+    
+    const updateDarkMode = (event: MediaQueryListEvent) => {
+      setIsDarkMode(event.matches)
+    }
+    
+    darkModeMediaQuery.addEventListener('change', updateDarkMode)
+    
     // Si aucune entité, ne pas tenter de créer un graphe
     if (entities.length === 0) {
       // Nettoyer le conteneur si nécessaire
@@ -136,11 +147,15 @@ export function EntityGraph({ entities, relationships }: EntityGraphProps) {
             label: entity.name,
             title: `${entity.name} (${entity.type})`,
             group: entity.type,
-            value: entity.mentions,
             // Make font color adapt to dark mode
             font: { color: isDarkMode ? '#f9fafb' : '#18181b' },
             shape: 'icon',
-            icon: getIconForEntityType(entity.type, isDarkMode)
+            icon: getIconForEntityType(entity.type, isDarkMode),
+            entityDetails: {
+              type: entity.type,
+              name: entity.name,
+            },
+            size: 25 // Fixed size for all nodes
           }))
         )
         
@@ -311,6 +326,25 @@ export function EntityGraph({ entities, relationships }: EntityGraphProps) {
             container.style.cursor = 'default'
           })
           
+          // Add click handler for nodes to navigate to the entity in the list
+          if (onEntityClick) {
+            network.on("click", function(params) {
+              if (params.nodes && params.nodes.length > 0) {
+                // Get the clicked node ID
+                const nodeId = params.nodes[0];
+                // Get node details from the DataSet
+                const node = nodes.get(nodeId);
+                // Use type assertion to access the entityDetails property
+                if (node) {
+                  const nodeData = node as unknown as { entityDetails?: { name: string; type: EntityType } };
+                  if (nodeData.entityDetails) {
+                    onEntityClick(nodeData.entityDetails.name, nodeData.entityDetails.type);
+                  }
+                }
+              }
+            });
+          }
+          
           // Force the rendu initial
           network.fit()
         }
@@ -320,7 +354,11 @@ export function EntityGraph({ entities, relationships }: EntityGraphProps) {
     }
     
     importVisNetwork()
-  }, [entities, relationships, isDarkMode, isHierarchical, iconsLoaded]) // Added iconsLoaded to dependencies
+    
+    return () => {
+      darkModeMediaQuery.removeEventListener('change', updateDarkMode)
+    }
+  }, [entities, relationships, isDarkMode, isHierarchical, iconsLoaded, onEntityClick])
   
   return (
     <div className="w-full border rounded-lg overflow-hidden border-zinc-200 dark:border-zinc-800">

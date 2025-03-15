@@ -171,8 +171,7 @@ export class AnalysisQueueService {
     current.entities.forEach(entity => {
       if (entitiesMap.has(entity.id)) {
         const existingEntity = entitiesMap.get(entity.id)!;
-        // Update mentions and merge aliases
-        existingEntity.mentions += entity.mentions;
+        // Update aliases
         existingEntity.aliases = [...new Set([...existingEntity.aliases, ...entity.aliases])];
         // Update summary if it's more detailed
         if (entity.summary && (!existingEntity.summary || entity.summary.length > existingEntity.summary.length)) {

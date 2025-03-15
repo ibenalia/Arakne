@@ -7,13 +7,14 @@ import { Entity, EntityType, Relationship } from '@/lib/entity-extraction'
 interface EntityStatsProps {
   entities: Entity[]
   relationships: Relationship[]
+  onEntityClick?: (entityName: string, entityType: EntityType) => void
 }
 
 /**
  * Component for visualizing entity statistics
  */
-export function EntityStats({ entities, relationships }: EntityStatsProps) {
-  // Couleurs pour les différents types d'entités
+export function EntityStats({ entities, relationships, onEntityClick }: EntityStatsProps) {
+  // Colors for different entity types
   const typeColors: Record<EntityType, string> = {
     'person': '#3b82f6',       // Blue
     'organization': '#ef4444', // Red
@@ -22,25 +23,18 @@ export function EntityStats({ entities, relationships }: EntityStatsProps) {
     'other': '#6b7280'         // Gray
   }
 
-  // Calculer les statistiques d'occurrence pour chaque entité
-  const entityOccurrences = entities.map(entity => ({
-    name: entity.name,
-    type: entity.type,
-    value: entity.mentions,
-    color: typeColors[entity.type]
-  })).sort((a, b) => b.value - a.value)
-
-  // Calculer la force de relation pour chaque entité
+  // Calculate relationship strength for each entity
   const entityStrengths = entities.map(entity => {
-    // Trouver toutes les relations où cette entité est impliquée
+    // Find all relationships where this entity is involved
     const entityRelations = relationships.filter(
       rel => rel.source === entity.id || rel.target === entity.id
     )
     
-    // Calculer la force totale
+    // Calculate total strength
     const totalStrength = entityRelations.reduce((acc, rel) => acc + rel.strength, 0)
     
     return {
+      id: entity.id,
       name: entity.name,
       type: entity.type,
       value: totalStrength,
@@ -48,14 +42,15 @@ export function EntityStats({ entities, relationships }: EntityStatsProps) {
     }
   }).sort((a, b) => b.value - a.value)
 
-  // Calculer le poids relatif de chaque entité (nombre de connexions)
+  // Calculate relative weight of each entity (number of connections)
   const entityConnections = entities.map(entity => {
-    // Trouver toutes les relations où cette entité est impliquée
+    // Find all relationships where this entity is involved
     const connectionCount = relationships.filter(
       rel => rel.source === entity.id || rel.target === entity.id
     ).length
     
     return {
+      id: entity.id,
       name: entity.name,
       type: entity.type,
       value: connectionCount,
@@ -63,30 +58,46 @@ export function EntityStats({ entities, relationships }: EntityStatsProps) {
     }
   }).sort((a, b) => b.value - a.value)
 
-  // Fonction pour générer les barres horizontales du graphique
-  const renderBarChart = (data: { name: string; type: string; value: number; color: string }[]) => {
-    // Calculer la valeur maximale pour normaliser les largeurs
-    const maxValue = Math.max(...data.map(item => item.value), 1)
+  // Function to generate horizontal bar chart
+  const renderBarChart = (data: { id: string; name: string; type: EntityType; value: number; color: string }[]) => {
+    // Take only top 10 for visibility
+    const topItems = data.slice(0, 10)
+    
+    // Find maximum value for scaling
+    const maxValue = Math.max(...topItems.map(item => item.value), 1)
+    
+    // Don't render if no data
+    if (topItems.length === 0) {
+      return (
+        <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+          No data to display
+        </div>
+      )
+    }
     
     return (
       <div className="space-y-2">
-        {data.map((item, index) => (
-          <div key={index} className="flex items-center space-x-2">
-            <div className="w-1/3 text-sm truncate" title={item.name}>
-              {item.name}
-            </div>
-            <div className="w-2/3 flex items-center space-x-2">
-              <div 
-                className="h-6 rounded-sm transition-all duration-500 flex items-center px-2"
-                style={{ 
-                  width: `${Math.max((item.value / maxValue) * 100, 5)}%`,
-                  backgroundColor: item.color
-                }}
+        {topItems.map(item => (
+          <div key={item.id} className="relative">
+            <div className="flex items-center justify-between mb-1">
+              <button 
+                className="text-sm font-medium hover:underline text-left truncate max-w-[70%]"
+                onClick={() => onEntityClick && onEntityClick(item.name, item.type)}
+                title={item.name}
               >
-                <span className="text-xs text-white font-medium truncate">
-                  {item.value}
-                </span>
-              </div>
+                {item.name}
+              </button>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">{item.value}</span>
+            </div>
+            <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
+              <div 
+                className="h-full rounded"
+                style={{ 
+                  width: `${(item.value / maxValue) * 100}%`, 
+                  backgroundColor: item.color,
+                  minWidth: '2px' // Ensure very small values are still visible
+                }}
+              />
             </div>
           </div>
         ))}
@@ -94,7 +105,7 @@ export function EntityStats({ entities, relationships }: EntityStatsProps) {
     )
   }
 
-  // Si aucune donnée, afficher un message
+  // If no data, display a message
   if (entities.length === 0) {
     return (
       <Card className="border dark:border-zinc-800">
@@ -113,26 +124,18 @@ export function EntityStats({ entities, relationships }: EntityStatsProps) {
 
   return (
     <Card className="border dark:border-zinc-800">
-      <CardHeader>
-        <CardTitle>Entity Statistics</CardTitle>
+      <CardHeader className="px-4 py-3">
+        <CardTitle className="text-xl">Entity Statistics</CardTitle>
         <CardDescription>
-          Visualize entity frequency, connections, and relationship strength
+          Visualize entity connections and relationship strength
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="occurrences">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="occurrences">Occurrences</TabsTrigger>
+        <Tabs defaultValue="connections">
+          <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="connections">Connections</TabsTrigger>
             <TabsTrigger value="strength">Relationship Strength</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="occurrences" className="pt-2">
-            <div className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-              Number of times each entity is mentioned in the text
-            </div>
-            {renderBarChart(entityOccurrences)}
-          </TabsContent>
           
           <TabsContent value="connections" className="pt-2">
             <div className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">

@@ -9,7 +9,8 @@ import { EntityGraph } from "@/components/entity-graph"
 import { EntityList } from "@/components/entity-list"
 import { EntityStats } from "@/components/entity-stats"
 import { AnalysisQueue } from "@/components/analysis-queue"
-import { ExtractionResult } from "@/lib/entity-extraction"
+import { AnalysisDescription } from "@/components/analysis-description"
+import { ExtractionResult, EntityType } from "@/lib/entity-extraction"
 import { queueService } from "@/lib/queue-service"
 
 /**
@@ -20,6 +21,7 @@ export default function Home() {
     entities: [],
     relationships: []
   })
+  const [selectedEntity, setSelectedEntity] = useState<{ name: string; type: EntityType } | undefined>(undefined)
   
   // Subscribe to task completion events at the page level to ensure DOM updates
   useEffect(() => {
@@ -56,6 +58,20 @@ export default function Home() {
     return unsubscribe;
   }, []);
 
+  // Handler for when an entity is clicked in the stats component
+  const handleEntityClick = (name: string, type: EntityType) => {
+    setSelectedEntity({ name, type });
+    
+    // Ensure the correct tab is active to display the EntityList component
+    const tabsElement = document.querySelector('[role="tablist"]');
+    if (tabsElement) {
+      const textTabTrigger = tabsElement.querySelector('[value="text"]');
+      if (textTabTrigger && textTabTrigger instanceof HTMLElement) {
+        textTabTrigger.click();
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4 transition-colors duration-300">
       <header className="mb-8 text-center">
@@ -64,18 +80,24 @@ export default function Home() {
           AI-assisted entity extraction and relationship visualization
         </p>
       </header>
-      
+
       <Tabs defaultValue="text" className="w-full mb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+          <div>
             <TabsList className="w-full">
               <TabsTrigger className="flex-1" value="text">Text Analysis</TabsTrigger>
-              <TabsTrigger className="flex-1" value="document">Document Analysis</TabsTrigger>
-              <TabsTrigger className="flex-1" value="image">Image Analysis</TabsTrigger>
+              <TabsTrigger className="flex-1" value="document" disabled>Document Analysis</TabsTrigger>
+              <TabsTrigger className="flex-1" value="image" disabled>Image Analysis</TabsTrigger>
             </TabsList>
           </div>
-          <div className="lg:col-span-2"></div>
         </div>
+              
+      <div className="mb-8">
+        <AnalysisDescription 
+          entities={analysisResult.entities} 
+          relationships={analysisResult.relationships} 
+        />
+      </div>
         
         <TabsContent value="text" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -84,10 +106,14 @@ export default function Home() {
             </div>
             <div className="lg:col-span-2">
               <div className="grid grid-cols-1 gap-6">
-                <EntityList entities={analysisResult.entities} />
+                <EntityList 
+                  entities={analysisResult.entities} 
+                  selectedEntity={selectedEntity}
+                />
                 <EntityStats 
                   entities={analysisResult.entities} 
                   relationships={analysisResult.relationships} 
+                  onEntityClick={handleEntityClick}
                 />
               </div>
             </div>
@@ -101,10 +127,14 @@ export default function Home() {
             </div>
             <div className="lg:col-span-2">
               <div className="grid grid-cols-1 gap-6">
-                <EntityList entities={analysisResult.entities} />
+                <EntityList 
+                  entities={analysisResult.entities} 
+                  selectedEntity={selectedEntity}
+                />
                 <EntityStats 
                   entities={analysisResult.entities} 
                   relationships={analysisResult.relationships} 
+                  onEntityClick={handleEntityClick}
                 />
               </div>
             </div>
@@ -118,22 +148,27 @@ export default function Home() {
             </div>
             <div className="lg:col-span-2">
               <div className="grid grid-cols-1 gap-6">
-                <EntityList entities={analysisResult.entities} />
+                <EntityList 
+                  entities={analysisResult.entities} 
+                  selectedEntity={selectedEntity}
+                />
                 <EntityStats 
                   entities={analysisResult.entities} 
                   relationships={analysisResult.relationships} 
+                  onEntityClick={handleEntityClick}
                 />
               </div>
             </div>
           </div>
         </TabsContent>
       </Tabs>
-      
+
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-50">Entity Relationship Graph</h2>
         <EntityGraph 
           entities={analysisResult.entities} 
           relationships={analysisResult.relationships} 
+          onEntityClick={handleEntityClick}
         />
       </div>
       
